@@ -1,19 +1,10 @@
 const pool = require('../config/db');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 require('dotenv').config();
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 const otpStore = {};
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
 
 const sendOTP = async (req, res) => {
   const { email } = req.body;
@@ -23,8 +14,8 @@ const sendOTP = async (req, res) => {
   otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
 
   try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await resend.emails.send({
+      from: 'onboarding@resend.dev',
       to: email,
       subject: 'Your Konvo OTP',
       text: `Your OTP is ${otp}. It expires in 5 minutes.`,
